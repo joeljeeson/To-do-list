@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="taskManagerApp">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Task Manager</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.8.3/angular.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/dist/tabler-icons.min.css">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<div class="app" ng-controller="TaskController as vm">
+
+  <div class="header">
+    <h1><i class="ti ti-checklist"></i>Task Manager</h1>
+    <p>{{vm.today | date:'EEEE, d MMMM y'}}</p>
+  </div>
+
+  <div class="stat-row">
+    <div class="stat-chip total">
+      <div class="num">{{vm.tasks.length}}</div>
+      <div class="lbl">Total tasks</div>
+    </div>
+    <div class="stat-chip pending">
+      <div class="num">{{vm.pendingCount()}}</div>
+      <div class="lbl">Pending</div>
+    </div>
+    <div class="stat-chip done">
+      <div class="num">{{vm.completedCount()}}</div>
+      <div class="lbl">Completed</div>
+    </div>
+  </div>
+
+  <div class="card">
+
+    <form class="add-row" ng-submit="vm.addTask()">
+      <input type="text" placeholder="Add a new task..." ng-model="vm.newTaskText" autofocus>
+      <select ng-model="vm.newTaskPriority">
+        <option value="low">Low</option>
+        <option value="medium" selected>Medium</option>
+        <option value="high">High</option>
+      </select>
+      <button type="submit" class="add-btn"><i class="ti ti-plus"></i> Add</button>
+    </form>
+
+    <div class="filters">
+      <button ng-repeat="f in vm.filters" ng-class="{active: vm.activeFilter === f.id}" ng-click="vm.setFilter(f.id)">
+        {{f.label}} <span ng-if="f.id !== 'all'">({{vm.countFor(f.id)}})</span>
+      </button>
+      <span class="spacer"></span>
+      <select class="sort-select" ng-model="vm.sortBy">
+        <option value="newest">Newest first</option>
+        <option value="oldest">Oldest first</option>
+        <option value="priority">By priority</option>
+      </select>
+    </div>
+
+    <ul class="list">
+      <li class="item" ng-repeat="t in vm.filteredTasks() track by t.id" ng-class="{done: t.done, editing: vm.editingId === t.id}">
+        <div ng-if="vm.editingId !== t.id" class="check" ng-class="{checked: t.done}" ng-click="vm.toggleTask(t)"><i class="ti ti-check" ng-if="t.done"></i></div>
+        <div class="item-body" ng-if="vm.editingId !== t.id">
+          <div class="item-text">{{t.text}}</div>
+          <div class="item-meta">
+            <span class="priority-tag" ng-class="t.priority">{{t.priority}}</span>
+            <span class="item-date">added {{t.createdAt | date:'MMM d'}}</span>
+          </div>
+        </div>
+        <div class="item-actions" ng-if="vm.editingId !== t.id">
+          <button class="icon-action" ng-click="vm.startEdit(t)"><i class="ti ti-pencil"></i></button>
+          <button class="icon-action danger" ng-click="vm.removeTask(t)"><i class="ti ti-trash"></i></button>
+        </div>
+        <form class="edit-row" ng-if="vm.editingId === t.id" ng-submit="vm.saveEdit(t)">
+          <input type="text" ng-model="vm.editText" focus-on-edit>
+          <select ng-model="vm.editPriority">
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+          </select>
+          <button type="submit" class="icon-action confirm"><i class="ti ti-check"></i></button>
+          <button type="button" class="icon-action danger" ng-click="vm.cancelEdit()"><i class="ti ti-x"></i></button>
+        </form>
+      </li>
+    </ul>
+
+    <div class="empty-state" ng-if="vm.filteredTasks().length === 0">
+      <i class="ti" ng-class="vm.tasks.length === 0 ? 'ti-clipboard-list' : (vm.activeFilter === 'completed' ? 'ti-mood-check' : 'ti-confetti')"></i>
+      {{vm.emptyMessage()}}
+      <div class="sub" ng-if="vm.tasks.length === 0">Add your first task above to get started.</div>
+    </div>
+
+    <div class="footer-row" ng-if="vm.tasks.length > 0">
+      <span>{{vm.pendingCount()}} task{{vm.pendingCount() === 1 ? '' : 's'}} remaining</span>
+      <button class="clear-link" ng-click="vm.clearCompleted()" ng-disabled="vm.completedCount() === 0">Clear completed</button>
+    </div>
+
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+</body>
+</html>
